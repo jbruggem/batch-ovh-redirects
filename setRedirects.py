@@ -14,22 +14,41 @@ def main():
 
 	redirects = process_redirects(json.load(open('redirects.json', 'r')), domain)
 
-	return
 
 	#login
 	session = soap.login(config["login"], config["password"], 'fr', 0)
 	print "login successfull"
 
-	existing = soap.redirectedEmailList(session, domain)[0]
+	soapExisting = soap.redirectedEmailList(session, domain)[0]
 
-	for red in existing:
-		print '"' + red.local+'": "'+red.target+'",'
+	existing = []
+	for red in soapExisting:
+		# print '"' + red.local+'": "'+red.target+'",'
+		existing.append((u''+red.local, u''+red.target))
 
-	print redirects
+	new_redirects = [r for r in redirects if r not in existing]
+	stale_redirects = [r for r in existing if r not in redirects]
 
-	#redirectedEmailAdd
-	#soap.redirectedEmailAdd(session, domain, 'staff-ribambelle', 'robin@28eme.be', '', 0)
-	#print "redirectedEmailAdd successfull"
+	print
+	print "Redirects to create"
+	print "======================"
+	pr(new_redirects)
+
+	# TODO: add them.
+		#redirectedEmailAdd
+		#soap.redirectedEmailAdd(session, domain, 'staff-ribambelle', 'robin@28eme.be', '', 0)
+		#print "redirectedEmailAdd successfull"
+
+	print
+	print "Redirects to remove"
+	print "======================"
+	pr(stale_redirects)
+
+
+	# TODO: make backup dump of removed redirects
+	# TODO: remove them.
+
+
 
 	#logout
 	soap.logout(session)
@@ -42,6 +61,10 @@ def append_domain(email, domain):
 
 	return email
 
+def pr(reds):
+	for r in reds:
+	 	print( r[0] + " => " + r[1] )
+
 def process_redirects(rs, domain):
 	reds = []
 	for src in rs:
@@ -53,8 +76,6 @@ def process_redirects(rs, domain):
 
 	reds = [ (r[0], append_domain(r[1], domain)) for r in reds]
 
-	for r in reds:
-		print( r[0] + " => " + r[1] )
-
+	return reds
 
 main()
