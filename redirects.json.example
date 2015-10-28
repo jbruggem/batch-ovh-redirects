@@ -1,0 +1,10 @@
+{
+    "source-address-name": [
+    	"destination-email1",
+    	"destination-email2"
+    ],
+
+	"source-address-other-name1": "internal-destination",
+	"source-address-other-name2": "external@destination.com"
+}
+
