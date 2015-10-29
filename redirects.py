@@ -47,6 +47,11 @@ def main():
                 set_redirects(domain, existing, redirects_file_path, session, soap)
 
 
+#################
+# actions
+#################
+
+
 def graph(domain, redirects_file):
     # ensure we remove the @28eme domain everywhere for the graph
     redirects = read_redirects(domain, redirects_file)
@@ -108,9 +113,9 @@ def set_redirects(domain, existing, redirects_file, session, soap):
         soap.redirectedEmailDel(session, domain, r[0], r[1], '', 0)
 
 
-def read_redirects(domain, redirects_file):
-    return process_redirects(json.load(open(redirects_file, 'r')), domain)
-
+#################
+# utils
+#################
 
 class OvhConnect:
     def __init__(self, l, p):
@@ -129,8 +134,11 @@ class OvhConnect:
         print("logout successfull")
 
 
+def read_redirects(domain, redirects_file):
+    return dict2redirects(json.load(open(redirects_file, 'r')), domain)
+
 def yes_or_exit():
-    answer = raw_input("[Y/N]")
+    answer = raw_input("[y/n] ")
     if answer.lower() != "y":
         sys.exit(1)
 
@@ -153,7 +161,11 @@ def pr(reds):
          print( r[0] + " => " + r[1] )
 
 
-def process_redirects(rs, domain):
+# turn json format (easy to write)
+# into a more systematic format (easy to process)
+# i.e, break up the 1 => N relationships into a list of 1 => 1
+# also, append domain name for dests without a domain
+def dict2redirects(rs, domain):
     reds = []
     for src in rs:
         if isinstance(rs[src], list):
@@ -162,9 +174,8 @@ def process_redirects(rs, domain):
         else:
             reds.append((src, rs[src]))
 
-    reds = [ (r[0], append_domain(r[1], domain)) for r in reds]
+    return [(r[0], append_domain(r[1], domain)) for r in reds]
 
-    return reds
 
 
 if __name__ == "__main__":
