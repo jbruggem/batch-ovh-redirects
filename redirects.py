@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import json
+from utils import *
 import argparse
 import os.path
 import sys
@@ -44,9 +44,49 @@ def main():
 
 
 #################
-# actions
+# action: get_redirects
 #################
 
+def get_redirects(api, domain, redirects_file):
+    existing = api.list()
+
+    with open(redirects_file, 'w') as f:
+        f.write(json.dumps(redirects2dict(existing, domain), sort_keys=True, indent=4))
+
+
+#################
+# action: set_redirects
+#################
+
+def set_redirects(api, domain, redirects_file):
+    existing = api.list()
+
+    redirects = read_redirects(domain, redirects_file)
+
+    new_redirects = [r for r in redirects if r not in existing]
+    stale_redirects = [r for r in existing if r not in redirects]
+
+    print("\nRedirects to create")
+    print("======================")
+    pr(new_redirects)
+
+    print("\nRedirects to remove")
+    print("======================")
+    pr(stale_redirects)
+
+    print("Do you wish the apply these changes ?")
+    yes_or_exit()
+
+    for r in new_redirects:
+        api.add(r[0], r[1])
+
+    for r in stale_redirects:
+        api.remove(r[0], r[1])
+
+
+#################
+# action: graph
+#################
 
 def graph(domain, redirects_file):
     # ensure we remove the @28eme domain everywhere for the graph
@@ -78,100 +118,6 @@ def graph(domain, redirects_file):
         f.writelines(contents)
         f.writelines(ranks)
         f.write('}')
-
-
-def get_redirects(api, domain, redirects_file):
-    existing = api.list()
-
-    with open(redirects_file, 'w') as f:
-        f.write(json.dumps(redirects2dict(existing, domain), sort_keys=True, indent=4))
-
-
-def set_redirects(api, domain, redirects_file):
-    existing = api.list()
-
-    redirects = read_redirects(domain, redirects_file)
-
-    new_redirects = [r for r in redirects if r not in existing]
-    stale_redirects = [r for r in existing if r not in redirects]
-
-    print("\nRedirects to create")
-    print("======================")
-    pr(new_redirects)
-
-    print("\nRedirects to remove")
-    print("======================")
-    pr(stale_redirects)
-
-    print("Do you wish the apply these changes ?")
-    yes_or_exit()
-
-    for r in new_redirects:
-        api.add(r[0], r[1])
-
-    for r in stale_redirects:
-        api.remove(r[0], r[1])
-
-
-#################
-# utils
-#################
-
-def read_redirects(domain, redirects_file):
-    return dict2redirects(json.load(open(redirects_file, 'r')), domain)
-
-def yes_or_exit():
-    answer = raw_input("[y/n] ")
-    if answer.lower() != "y":
-        sys.exit(1)
-
-
-def remove_domain(email, domain):
-    domain = '@'+domain
-    if domain in email:
-        email = email.replace(domain, '')
-    return email
-
-
-def append_domain(email, domain):
-    if not '@' in email:
-        email += "@"+domain
-    return email
-
-
-def pr(reds):
-    for r in reds:
-         print( r[0] + " => " + r[1] )
-
-
-# turn json format (easy to write)
-# into a more systematic format (easy to process)
-# i.e, break up the 1 => N relationships into a list of 1 => 1
-# also, append domain name for dests without a domain
-def dict2redirects(rs, domain):
-    reds = []
-    for src in rs:
-        if isinstance(rs[src], list):
-            for dest in rs[src]:
-                reds.append((src, dest))
-        else:
-            reds.append((src, rs[src]))
-
-    return [(r[0], append_domain(r[1], domain)) for r in reds]
-
-
-def redirects2dict(redirects, domain):
-    res = {}
-    for r in redirects:
-        dest = remove_domain(r[1], domain)
-        try:
-            res[r[0]].append(dest)
-        except KeyError:
-            res[r[0]] = [dest]
-    for k in res:
-        if 1 == len(res[k]):
-            res[k] = res[k][0]
-    return res
 
 
 if __name__ == "__main__":
