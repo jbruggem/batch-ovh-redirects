@@ -67,13 +67,13 @@ def graph(domain, redirects_file):
         if '@' in red[1]:
             externals.append(red[1])
 
-        return '    "%s" -- "%s";\n' % red
+        return '    "%s" -> "%s";\n' % red
 
     contents = [line(r) for r in redirects]
-    ranks = '{ rank=same, "%s" }\n' % '", "'.join(externals)
+    ranks = '{ rank=same; "%s" }\n' % '" "'.join(externals)
 
     with open(graph_file, 'w') as f:
-        f.write("graph { \n     rankdir=LR; \n")
+        f.write("digraph { \n     rankdir=LR; \n")
         f.writelines(contents)
         f.writelines(ranks)
         f.write('}')
