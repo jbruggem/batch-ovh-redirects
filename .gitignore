@@ -1,2 +1,5 @@
 config.json
 redirects.json
+.idea
+redirects.dot
+redirects.png
