@@ -44,7 +44,7 @@ def main():
             if "get" == args.action:
                 get_redirects(existing, redirects_file_path)
             elif "set" == args.action:
-                set_redirects(domain, existing, redirects_file_path)
+                set_redirects(domain, existing, redirects_file_path, session, soap)
 
 
 def graph(domain, redirects_file):
@@ -84,7 +84,7 @@ def get_redirects(existing, redirects_file):
         f.write(json.dumps(dict(existing), sort_keys=True, indent=4))
 
 
-def set_redirects(domain, existing, redirects_file):
+def set_redirects(domain, existing, redirects_file, session, soap):
     redirects = read_redirects(domain, redirects_file)
 
     new_redirects = [r for r in redirects if r not in existing]
@@ -94,17 +94,18 @@ def set_redirects(domain, existing, redirects_file):
     print("======================")
     pr(new_redirects)
 
-    # TODO: add them.
-        #redirectedEmailAdd
-        #soap.redirectedEmailAdd(session, domain, 'staff-ribambelle', 'robin@28eme.be', '', 0)
-        #print "redirectedEmailAdd successfull"
-
     print("\nRedirects to remove")
     print("======================")
     pr(stale_redirects)
 
-    # TODO: make backup dump of removed redirects
-    # TODO: remove them.
+    print("Do you wish the apply these changes ?")
+    yes_or_exit()
+
+    for r in new_redirects:
+        soap.redirectedEmailAdd(session, domain, r[0], r[1], '', 0)
+
+    for r in stale_redirects:
+        soap.redirectedEmailDel(session, domain, r[0], r[1], '', 0)
 
 
 def read_redirects(domain, redirects_file):
