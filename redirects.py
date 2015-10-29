@@ -42,7 +42,8 @@ def main():
                 existing.append((u''+red.local, u''+red.target))
 
             if "get" == args.action:
-                get_redirects(existing, redirects_file_path)
+                get_redirects(domain, existing, redirects_file_path)
+
             elif "set" == args.action:
                 set_redirects(domain, existing, redirects_file_path, session, soap)
 
@@ -84,9 +85,9 @@ def graph(domain, redirects_file):
         f.write('}')
 
 
-def get_redirects(existing, redirects_file):
+def get_redirects(domain, existing, redirects_file):
     with open(redirects_file, 'w') as f:
-        f.write(json.dumps(dict(existing), sort_keys=True, indent=4))
+        f.write(json.dumps(redirects2dict(existing, domain), sort_keys=True, indent=4))
 
 
 def set_redirects(domain, existing, redirects_file, session, soap):
@@ -176,6 +177,19 @@ def dict2redirects(rs, domain):
 
     return [(r[0], append_domain(r[1], domain)) for r in reds]
 
+
+def redirects2dict(redirects, domain):
+    res = {}
+    for r in redirects:
+        dest = remove_domain(r[1], domain)
+        try:
+            res[r[0]].append(dest)
+        except KeyError:
+            res[r[0]] = [dest]
+    for k in res:
+        if 1 == len(res[k]):
+            res[k] = res[k][0]
+    return res
 
 
 if __name__ == "__main__":
