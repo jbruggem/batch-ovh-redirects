@@ -3,3 +3,4 @@ redirects.json
 .idea
 redirects.dot
 redirects.png
+*.pyc

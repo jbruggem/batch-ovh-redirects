@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-from SOAPpy import WSDL
 import json
 import argparse
 import os.path
 import sys
 import re
+from ovhwrapper import OvhConnect
 
 
 def main():
@@ -29,23 +29,18 @@ def main():
     config = json.load(open('config.json', 'r'))
     domain = config['domain']
 
+    # no connection needed
     if "graph" == args.action:
         graph(domain, redirects_file_path)
+    # connection needed (get, set)
     else:
-        login = config['login']
-        password = config['password']
-        with OvhConnect(login, password) as (soap, session):
-            soap_existing = soap.redirectedEmailList(session, domain)[0]
-
-            existing = []
-            for red in soap_existing:
-                existing.append((u''+red.local, u''+red.target))
+        with OvhConnect(config['login'], config['password'], domain) as api:
 
             if "get" == args.action:
-                get_redirects(domain, existing, redirects_file_path)
+                get_redirects(api, domain, redirects_file_path)
 
             elif "set" == args.action:
-                set_redirects(domain, existing, redirects_file_path, session, soap)
+                set_redirects(api, domain, redirects_file_path)
 
 
 #################
@@ -85,12 +80,16 @@ def graph(domain, redirects_file):
         f.write('}')
 
 
-def get_redirects(domain, existing, redirects_file):
+def get_redirects(api, domain, redirects_file):
+    existing = api.list()
+
     with open(redirects_file, 'w') as f:
         f.write(json.dumps(redirects2dict(existing, domain), sort_keys=True, indent=4))
 
 
-def set_redirects(domain, existing, redirects_file, session, soap):
+def set_redirects(api, domain, redirects_file):
+    existing = api.list()
+
     redirects = read_redirects(domain, redirects_file)
 
     new_redirects = [r for r in redirects if r not in existing]
@@ -108,32 +107,15 @@ def set_redirects(domain, existing, redirects_file, session, soap):
     yes_or_exit()
 
     for r in new_redirects:
-        soap.redirectedEmailAdd(session, domain, r[0], r[1], '', 0)
+        api.add(r[0], r[1])
 
     for r in stale_redirects:
-        soap.redirectedEmailDel(session, domain, r[0], r[1], '', 0)
+        api.remove(r[0], r[1])
 
 
 #################
 # utils
 #################
-
-class OvhConnect:
-    def __init__(self, l, p):
-        self.login = l
-        self.password = p
-
-    def __enter__(self):
-        self.soap = WSDL.Proxy('https://www.ovh.com/soapi/soapi-re-1.63.wsdl')
-        self.session = self.soap.login(self.login, self.password, 'fr', 0)
-        print("login successfull")
-        return self.soap, self.session
-
-    def __exit__(self, type, value, traceback):
-        print("\n\nLogging out...")
-        self.soap.logout(self.session)
-        print("logout successfull")
-
 
 def read_redirects(domain, redirects_file):
     return dict2redirects(json.load(open(redirects_file, 'r')), domain)
