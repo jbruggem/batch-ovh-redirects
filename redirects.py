@@ -95,8 +95,7 @@ def graph(domain, redirects_file):
 
     graph_file = re.sub(r"\.json$", '.dot', redirects_file)
     if graph_file == redirects_file:
-        print redirects_file
-        print graph_file
+        print(redirects_file, graph_file)
         raise Exception("Error")
 
     externals = []
