@@ -1,4 +1,6 @@
 from SOAPpy import WSDL
+from SOAPpy import Types
+import time
 
 
 class OvhConnect:
@@ -26,11 +28,26 @@ class OvhRedirectsApi:
         self.session = session
         self.soap = soap
 
+    @staticmethod
+    def _wrap_call(call):
+        try:
+            print("Waiting...")
+            time.sleep(10)
+            return call()
+        except Types.faultType as e:
+            print("\nERROR: "+e.faultstring+"\n")
+
     def add(self, origin, destination):
-        self.soap.redirectedEmailAdd(self.session, self.domain, origin, destination, '', 0)
+        def call():
+            return self.soap.redirectedEmailAdd(self.session, self.domain, origin, destination, '', 0)
+
+        return self._wrap_call(call)
 
     def remove(self, origin, destination):
-        self.soap.redirectedEmailDel(self.session, self.domain, origin, destination, '', 0)
+        def call():
+            return self.soap.redirectedEmailDel(self.session, self.domain, origin, destination, '', 0)
+
+        return self._wrap_call(call)
 
     def list(self):
         soap_existing = self.soap.redirectedEmailList(self.session, self.domain)[0]

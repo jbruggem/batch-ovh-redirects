@@ -27,7 +27,7 @@ def append_domain(email, domain):
 
 def pr(reds):
     for r in reds:
-         print( r[0] + " => " + r[1] )
+        print("%s => %s " % r)
 
 
 # turn json format (easy to write)

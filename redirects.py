@@ -74,14 +74,18 @@ def set_redirects(api, domain, redirects_file):
     print("======================")
     pr(stale_redirects)
 
-    print("Do you wish the apply these changes ?")
+    print("\nDo you wish the apply these changes ?")
     yes_or_exit()
 
     for r in new_redirects:
-        api.add(r[0], r[1])
+        print("api add %s => %s" % r)
+        resp = api.add(r[0], r[1])
+        print resp
 
     for r in stale_redirects:
-        api.remove(r[0], r[1])
+        print("api remove %s => %s " % r)
+        resp = api.remove(r[0], r[1])
+        print resp
 
 
 #################
