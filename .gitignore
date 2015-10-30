@@ -5,3 +5,4 @@ redirects.dot
 redirects.png
 *.pyc
 /cache.pickle
+__pycache__
