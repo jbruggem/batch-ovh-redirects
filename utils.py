@@ -7,7 +7,7 @@ def read_redirects(domain, redirects_file):
 
 
 def yes_or_exit():
-    answer = raw_input("[y/n] ")
+    answer = input("[y/n] ")
     if answer.lower() != "y":
         sys.exit(1)
 
@@ -30,10 +30,14 @@ def pr(reds):
         print("%s => %s " % r)
 
 
+def dict2tuple(red):
+    return red['from'], red['to']
+
+
 # turn json format (easy to write)
 # into a more systematic format (easy to process)
 # i.e, break up the 1 => N relationships into a list of 1 => 1
-# also, append domain name for dests without a domain
+# also, append domain name for emails without a domain
 def dict2redirects(rs, domain):
     reds = []
     for src in rs:
@@ -43,17 +47,18 @@ def dict2redirects(rs, domain):
         else:
             reds.append((src, rs[src]))
 
-    return [(r[0], append_domain(r[1], domain)) for r in reds]
+    return [(append_domain(r[0], domain), append_domain(r[1], domain)) for r in reds]
 
 
 def redirects2dict(redirects, domain):
     res = {}
     for r in redirects:
-        dest = remove_domain(r[1], domain)
+        dest = remove_domain(r['to'], domain)
+        src = remove_domain(r['from'], domain)
         try:
-            res[r[0]].append(dest)
+            res[src].append(dest)
         except KeyError:
-            res[r[0]] = [dest]
+            res[src] = [dest]
     for k in res:
         if 1 == len(res[k]):
             res[k] = res[k][0]

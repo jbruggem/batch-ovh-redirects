@@ -1,5 +1,7 @@
 {
-    "login": "xxxxxxx-ovh",
-    "password": "PASSWORD"
+    "domain": "example.org",
+    "app_key": "",
+    "app_secret": "",
+    "consumer_key": ""
 }
 

@@ -1,7 +1,34 @@
 Batch update mail redirections using OVH management APIs.
 
-* runtime: tested with python 2.7
-* Dependencies: soappy
+Env: 
+
+* runtime: tested with python 3.4
+* Dependencies: OVH
+
+
+# OVH
+
+First, go there to get app key and app secret: 
+
+Then, run the following code:
+```python
+import ovh
+c = ovh.Client(endpoint='ovh-eu', application_key=KEY, application_secret=SECRET)
+c.request_consumerkey(access_rules = [
+       {'method': 'POST', 'path': '/email/domain/'},
+       {'method': 'GET', 'path': '/email/domain/'}, 
+       {'method': 'PUT', 'path': '/email/domain/'}, 
+       {'method': 'DELETE', 'path': '/email/domain/'}
+   ])
+```
+
+The reply to this request will be a consumer key and an URL. Visit the URL with your browser to validate the consumer key.
+
+Refs:
+
+* [https://api.ovh.com/g934.first_step_with_api]
+* [https://github.com/ovh/python-ovh]
+* [https://api.ovh.com/createToken/index.cgi?GET=/me]
 
 
 # options

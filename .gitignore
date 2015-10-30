@@ -4,3 +4,4 @@ redirects.json
 redirects.dot
 redirects.png
 *.pyc
+/cache.pickle

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from utils import *
 import argparse
@@ -34,7 +34,7 @@ def main():
         graph(domain, redirects_file_path)
     # connection needed (get, set)
     else:
-        with OvhConnect(config['login'], config['password'], domain) as api:
+        with OvhConnect(domain, config['app_key'], config['app_secret'], config['consumer_key']) as api:
 
             if "get" == args.action:
                 get_redirects(api, domain, redirects_file_path)
@@ -60,19 +60,26 @@ def get_redirects(api, domain, redirects_file):
 
 def set_redirects(api, domain, redirects_file):
     existing = api.list()
+    existing_tuples = [dict2tuple(r) for r in existing]
 
     redirects = read_redirects(domain, redirects_file)
 
-    new_redirects = [r for r in redirects if r not in existing]
-    stale_redirects = [r for r in existing if r not in redirects]
+    new_redirects = [r for r in redirects if r not in existing_tuples]
+    stale_redirects = [r for r in existing if dict2tuple(r) not in redirects]
 
-    print("\nRedirects to create")
-    print("======================")
-    pr(new_redirects)
+    if 0 < len(new_redirects):
+        print("\nRedirects to create")
+        print("======================")
+        pr(new_redirects)
 
-    print("\nRedirects to remove")
-    print("======================")
-    pr(stale_redirects)
+    if 0 < len(stale_redirects):
+        print("\nRedirects to remove")
+        print("======================")
+        pr([dict2tuple(r) for r in stale_redirects])
+
+    if 0 == len(new_redirects) and 0 == len(stale_redirects):
+        print("\nNothing to do, Redirects are up to date!\n")
+        return
 
     print("\nDo you wish the apply these changes ?")
     yes_or_exit()
@@ -80,12 +87,12 @@ def set_redirects(api, domain, redirects_file):
     for r in new_redirects:
         print("api add %s => %s" % r)
         resp = api.add(r[0], r[1])
-        print resp
+        print(resp)
 
     for r in stale_redirects:
-        print("api remove %s => %s " % r)
-        resp = api.remove(r[0], r[1])
-        print resp
+        print("api remove %s => %s " % dict2tuple(r))
+        resp = api.remove(r['id'])
+        print(resp)
 
 
 #################
