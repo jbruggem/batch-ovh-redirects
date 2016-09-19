@@ -5,12 +5,13 @@ import argparse
 import os.path
 import sys
 import re
+from itertools import groupby
 from ovhwrapper import OvhConnect
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["get", "set", "graph"])
+    parser.add_argument("action", choices=["get", "set", "list", "graph"])
     parser.add_argument("-r", "--redirects", default="redirects.json")
     parser.add_argument("-c", "--config", default="config.json")
     args = parser.parse_args()
@@ -32,6 +33,8 @@ def main():
     # no connection needed
     if "graph" == args.action:
         graph(domain, redirects_file_path)
+    elif "list" == args.action:
+        view_list(domain, redirects_file_path)
     # connection needed (get, set)
     else:
         with OvhConnect(domain, config['app_key'], config['app_secret'], config['consumer_key']) as api:
@@ -96,6 +99,24 @@ def set_redirects(api, domain, redirects_file):
 
 
 #################
+# action: list
+#################
+
+def view_list(domain, redirects_file):
+    redirects = read_redirects(domain, redirects_file)
+
+    def print_redir(redir):
+        print( redir[0] + " => " + str(redir[1]) )
+
+    print("\nExternal: \n================\n")
+    [print_redir(r) for r in redirects if not r[1].endswith('@'+domain)]
+
+    print("\nInternal: \n================\n")
+    internals = [r for r in redirects if r[1].endswith('@'+domain)]
+    grouped_internals = [[g[0], list(map(lambda x: x[1], g[1]))] for g in groupby(internals, lambda x: x[0])]
+    [print_redir(r) for r in grouped_internals]
+
+#################
 # action: graph
 #################
 
@@ -107,7 +128,7 @@ def graph(domain, redirects_file):
     graph_file = re.sub(r"\.json$", '.dot', redirects_file)
     if graph_file == redirects_file:
         print(redirects_file, graph_file)
-        raise Exception("Error")
+        raise Exception("Error: trying to write graph in redirects file.")
 
     externals = []
 
