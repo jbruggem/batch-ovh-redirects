@@ -47,7 +47,7 @@ usage: redirects.py [-h] [-r REDIRECTS] [-c CONFIG] {get,set,graph}
 Retrieve existing mappings from OVH. Usage:
 
 ```bash
-python3 redirects.py get
+./redirects.py get
 ```
 
 It will store all the existing redirections in `redirects.json`.
@@ -57,7 +57,7 @@ It will store all the existing redirections in `redirects.json`.
 Replace all email mappings on OVH. Usage:
 
 ```bash
-python3 redirects.py set
+./redirects.py set
 ```
 
 It will use `redirects.json` to replace all the redirects by those in that file.
@@ -68,7 +68,7 @@ It will use `redirects.json` to replace all the redirects by those in that file.
 Produce a graphviz `.dot` file describing the contents of  `redirects.json`. Usage:
 
 ```bash
-python3 redirects.py graph
+./redirects.py graph
 ```
 
 Then you can make a PNG out of it (provided you have graphviz installed):
