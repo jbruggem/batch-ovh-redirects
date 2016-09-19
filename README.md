@@ -1,6 +1,6 @@
 Batch update mail redirections using OVH management APIs.
 
-Env: 
+Env:
 
 * runtime: tested with python 3.4
 * Dependencies: OVH
@@ -8,7 +8,7 @@ Env:
 
 # OVH
 
-First, go there to get app key and app secret: 
+First, go there to get app key and app secret:
 
 Then, run the following code:
 ```python
@@ -16,8 +16,8 @@ import ovh
 c = ovh.Client(endpoint='ovh-eu', application_key=KEY, application_secret=SECRET)
 c.request_consumerkey(access_rules = [
        {'method': 'POST', 'path': '/email/domain/'},
-       {'method': 'GET', 'path': '/email/domain/'}, 
-       {'method': 'PUT', 'path': '/email/domain/'}, 
+       {'method': 'GET', 'path': '/email/domain/'},
+       {'method': 'PUT', 'path': '/email/domain/'},
        {'method': 'DELETE', 'path': '/email/domain/'}
    ])
 ```
@@ -47,7 +47,7 @@ usage: redirects.py [-h] [-r REDIRECTS] [-c CONFIG] {get,set,graph}
 Retrieve existing mappings from OVH. Usage:
 
 ```bash
-python redirects.py get
+python3 redirects.py get
 ```
 
 It will store all the existing redirections in `redirects.json`.
@@ -57,18 +57,18 @@ It will store all the existing redirections in `redirects.json`.
 Replace all email mappings on OVH. Usage:
 
 ```bash
-python redirects.py set
+python3 redirects.py set
 ```
 
 It will use `redirects.json` to replace all the redirects by those in that file.
-    
+
 
 ## graph
 
 Produce a graphviz `.dot` file describing the contents of  `redirects.json`. Usage:
 
 ```bash
-python redirects.py graph
+python3 redirects.py graph
 ```
 
 Then you can make a PNG out of it (provided you have graphviz installed):
