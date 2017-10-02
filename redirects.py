@@ -121,7 +121,7 @@ def view_list(domain, redirects_file):
 #################
 
 def graph(domain, redirects_file):
-    # ensure we remove the @28eme domain everywhere for the graph
+    # ensure we remove the main domain everywhere for the graph
     redirects = read_redirects(domain, redirects_file)
     redirects = [(remove_domain(r[0], domain), remove_domain(r[1], domain)) for r in redirects]
 
@@ -130,23 +130,40 @@ def graph(domain, redirects_file):
         print(redirects_file, graph_file)
         raise Exception("Error: trying to write graph in redirects file.")
 
-    externals = []
+    def is_external(red):
+        ret = set()
 
-    def line(red):
         if '@' in red[0]:
-            externals.append(red[0])
+            ret.add(red[0])
 
         if '@' in red[1]:
-            externals.append(red[1])
+            ret.add(red[1])
+        
+        return ret
 
-        return '    "%s" -> "%s";\n' % red
 
-    contents = [line(r) for r in redirects]
+    def line(red):
+        return '    "%s" -> "%s" [fillcolor=darkolivegreen4, color=darkolivegreen4];\n' % red
+
+    # flatmap
+    all_nodes = set([r for pairs in redirects for r in pairs])
+
+    # extract externals
+    externals = set([node for node in all_nodes if '@' in node])
+
+    print(all_nodes.difference(externals))
+    print(externals)
+
+    config_nodes_normal = ['"'+n+'"  [shape=box,style=rounded,label="'+n+'",fontcolor=darkgreen, color=darkgreen]; \n' for n in all_nodes.difference(externals)]
+    config_nodes_external = ['"'+n+'"  [shape=plaintext,label="'+n+'",fontcolor=darkslategray4]; \n' for n in externals]
+    vertices = [line(r) for r in redirects]
     ranks = '{ rank=same; "%s" }\n' % '" "'.join(externals)
 
     with open(graph_file, 'w') as f:
         f.write("digraph { \n     rankdir=LR; \n")
-        f.writelines(contents)
+        f.writelines(config_nodes_normal)
+        f.writelines(config_nodes_external)
+        f.writelines(vertices)
         f.writelines(ranks)
         f.write('}')
 
