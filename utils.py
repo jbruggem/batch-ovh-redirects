@@ -4,6 +4,23 @@ import sys
 import json
 
 
+def find_final_dests(hops, redirects, sources):
+    useable_hops = [h for h in hops if h in sources]
+    if len(useable_hops) == 0:
+        return hops
+
+    new_hops = set([r[1] for r in redirects if r[0] in useable_hops])
+    final_destinations = [h for h in hops if h not in sources]
+    return find_final_dests(new_hops.union(final_destinations), redirects, sources)
+
+def flatten_redirects(redirects):
+    sources = set([r[0] for r in redirects])
+    # for each source, list of final dests
+    redirects_per_source = [(s, find_final_dests([s], redirects, sources)) for s in sources]
+    # flatten
+    return [line for src in redirects_per_source for line in [(src[0], target) for target in src[1]]]
+
+
 def read_redirects(domain, redirects_file):
     return dict2redirects(json.load(open(redirects_file, 'r')), domain)
 

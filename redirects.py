@@ -15,13 +15,11 @@ def main():
     parser.add_argument("action", choices=["get", "set", "list", "graph"])
     parser.add_argument("-r", "--redirects", default="redirects.json")
     parser.add_argument("-c", "--config", default="config.json")
+    parser.add_argument("-d", "--dry-run", action='store_true')
+    parser.add_argument("-f", "--flatten-redirects", action='store_true')
     args = parser.parse_args()
 
     redirects_file_path = os.path.abspath(args.redirects)
-    if "get" == args.action and os.path.isfile(redirects_file_path):
-        print(redirects_file_path)
-        print("Redirects file exists and will be overwritten. Are you sure ?")
-        yes_or_exit()
 
     if args.action in ["set", "graph"] and not os.path.isfile(redirects_file_path):
         print(redirects_file_path)
@@ -33,7 +31,7 @@ def main():
 
     # no connection needed
     if "graph" == args.action:
-        graph(domain, redirects_file_path)
+        graph(domain, redirects_file_path, args.dry_run)
     elif "list" == args.action:
         view_list(domain, redirects_file_path)
     # connection needed (get, set)
@@ -41,35 +39,51 @@ def main():
         with OvhConnect(domain, config['app_key'], config['app_secret'], config['consumer_key']) as api:
 
             if "get" == args.action:
-                get_redirects(api, domain, redirects_file_path)
+                get_redirects(api, domain, redirects_file_path, args.dry_run)
 
             elif "set" == args.action:
-                set_redirects(api, domain, redirects_file_path)
+                set_redirects(api, domain, redirects_file_path, args.flatten_redirects, args.dry_run)
 
 
 #################
 # action: get_redirects
 #################
 
-def get_redirects(api, domain, redirects_file):
+def get_redirects(api, domain, redirects_file, dry_run):
     existing = api.list()
+    json_content = json.dumps(redirects2dict(existing, domain), sort_keys=True, indent=4)
+
+    if dry_run:
+        print(json_content)
+        print("\nDry run, not writing redirects file.")
+        return
+
+    if  os.path.isfile(redirects_file):
+        print(redirects_file)
+        print("Redirects file exists and will be overwritten. Are you sure ?")
+        yes_or_exit()
 
     with open(redirects_file, 'w') as f:
-        f.write(json.dumps(redirects2dict(existing, domain), sort_keys=True, indent=4))
+        f.write(json_content)
 
 
 #################
 # action: set_redirects
 #################
 
-def set_redirects(api, domain, redirects_file):
+def set_redirects(api, domain, redirects_file, flat_redirects, dry_run):
     existing = api.list()
     existing_tuples = [dict2tuple(r) for r in existing]
 
     redirects = read_redirects(domain, redirects_file)
 
-    new_redirects = [r for r in redirects if r not in existing_tuples]
-    stale_redirects = [r for r in existing if dict2tuple(r) not in redirects]
+    if flat_redirects:
+        expected_redirects = flatten_redirects(redirects)
+    else:
+        expected_redirects = redirects
+
+    new_redirects = [r for r in expected_redirects if r not in existing_tuples]
+    stale_redirects = [r for r in existing if dict2tuple(r) not in expected_redirects]
 
     if 0 < len(new_redirects):
         print("\nRedirects to create")
@@ -83,6 +97,10 @@ def set_redirects(api, domain, redirects_file):
 
     if 0 == len(new_redirects) and 0 == len(stale_redirects):
         print("\nNothing to do, Redirects are up to date!\n")
+        return
+
+    if dry_run:
+        print("\n Dry run, not applying changes.")
         return
 
     print("\nDo you wish the apply these changes ?")
@@ -121,7 +139,7 @@ def view_list(domain, redirects_file):
 # action: graph
 #################
 
-def graph(domain, redirects_file):
+def graph(domain, redirects_file, dry_run):
     # ensure we remove the main domain everywhere for the graph
     redirects = read_redirects(domain, redirects_file)
     redirects = [(remove_domain(r[0], domain), remove_domain(r[1], domain)) for r in redirects]
@@ -157,6 +175,10 @@ def graph(domain, redirects_file):
     config_nodes_external = ['    "'+n+'"  [shape=plaintext,label="'+n+'",fontcolor=darkslategray4]; \n' for n in externals]
     vertices = [line(r) for r in redirects]
     ranks = '{ rank=same; "%s" }\n' % '" "'.join(externals)
+
+    if dry_run:
+        print("\nDry run, not writing to graph file: " + graph_file + ".")
+        return
 
     with open(graph_file, 'w') as f:
         f.write("digraph { \n     rankdir=LR; \n")
