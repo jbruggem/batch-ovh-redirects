@@ -6,6 +6,7 @@ import os.path
 import sys
 import re
 from itertools import groupby
+from collections import OrderedDict
 from ovhwrapper import OvhConnect
 
 
@@ -145,22 +146,23 @@ def graph(domain, redirects_file):
     def line(red):
         return '    "%s" -> "%s" [fillcolor=gray, color=gray];\n' % red
 
-    # flatmap
-    all_nodes = set([r for pairs in redirects for r in pairs])
+    # flatmap & remove duplicates
+    all_nodes = list(OrderedDict.fromkeys([r for pairs in redirects for r in pairs]))
 
     # extract externals
-    externals = set([node for node in all_nodes if '@' in node])
+    externals = [node for node in all_nodes if '@' in node]
+    normals = [node for node in all_nodes if not '@' in node]
 
-    config_nodes_normal = ['"'+n+'"  [shape=box,style=rounded,label="'+n+'",fontcolor=darkgreen, color=darkgreen]; \n' for n in all_nodes.difference(externals)]
-    config_nodes_external = ['"'+n+'"  [shape=plaintext,label="'+n+'",fontcolor=darkslategray4]; \n' for n in externals]
+    config_nodes_normal = ['    "'+n+'"  [shape=box,style=rounded,label="'+n+'",fontcolor=darkgreen, color=darkgreen]; \n' for n in normals]
+    config_nodes_external = ['    "'+n+'"  [shape=plaintext,label="'+n+'",fontcolor=darkslategray4]; \n' for n in externals]
     vertices = [line(r) for r in redirects]
     ranks = '{ rank=same; "%s" }\n' % '" "'.join(externals)
 
     with open(graph_file, 'w') as f:
         f.write("digraph { \n     rankdir=LR; \n")
+        f.writelines(vertices)
         f.writelines(config_nodes_normal)
         f.writelines(config_nodes_external)
-        f.writelines(vertices)
         f.writelines(ranks)
         f.write('}')
 
