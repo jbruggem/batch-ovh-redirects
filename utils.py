@@ -2,6 +2,7 @@
 
 import sys
 import json
+import re
 
 
 def find_final_dests(hops, redirects, sources):
@@ -45,8 +46,11 @@ def append_domain(email, domain):
 
 
 def pr(reds):
-    for r in reds:
-        print("%s => %s " % r)
+    previous_from = ""
+    for red in sorted(reds, key=lambda t: t[0]):
+        from_address = re.sub(r"[^ ]", " ", red[0]) if previous_from == red[0] else red[0]
+        print("%s => %s " % (from_address, red[1]))
+        previous_from = red[0]
 
 
 def dict2tuple(red):
