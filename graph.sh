@@ -1,4 +1,4 @@
 #!/bin/bash
 
 ./redirects.py graph
-dot redirects.dot -Tpng -o redirects.png
+ccomps -x redirects.dot | dot | gvpack -array3 | neato -Tpng -n2 -o redirects.png

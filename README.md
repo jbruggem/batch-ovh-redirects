@@ -71,8 +71,8 @@ Produce a graphviz `.dot` file describing the contents of  `redirects.json`. Usa
 ./redirects.py graph
 ```
 
-Then you can make a PNG out of it (provided you have graphviz installed):
+You can directly make a PNG out of it (provided you have graphviz installed):
 
 ```bash
-dot redirects.dot -Tpng -o redirects.png
+./graph.sh
 ```
