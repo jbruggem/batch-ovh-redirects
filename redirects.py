@@ -103,6 +103,15 @@ def set_redirects(api, domain, redirects_file, flat_redirects, dry_run):
         print("\n Dry run, not applying changes.")
         return
 
+    if flat_redirects:
+        print("""\nYou asked to flatten redirects. This means that you will not be
+able to rebuild the redirects graph locally by doing a 'get' from the server.
+It also means you loose the ability to manually configure an alias easily
+using OVH's UI.
+
+Are you sure you wish to proceed  ?""")
+        yes_or_exit()
+
     print("\nDo you wish the apply these changes ?")
     yes_or_exit()
 
@@ -157,7 +166,7 @@ def graph(domain, redirects_file, dry_run):
 
         if '@' in red[1]:
             ret.add(red[1])
-        
+
         return ret
 
 
