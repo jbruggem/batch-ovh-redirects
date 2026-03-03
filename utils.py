@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-
-import sys
 import json
 import re
+import sys
 
 
 def find_final_dests(hops, redirects, sources):
@@ -14,16 +12,23 @@ def find_final_dests(hops, redirects, sources):
     final_destinations = [h for h in hops if h not in sources]
     return find_final_dests(new_hops.union(final_destinations), redirects, sources)
 
+
 def flatten_redirects(redirects):
     sources = set([r[0] for r in redirects])
     # for each source, list of final dests
-    redirects_per_source = [(s, find_final_dests([s], redirects, sources)) for s in sources]
+    redirects_per_source = [
+        (s, find_final_dests([s], redirects, sources)) for s in sources
+    ]
     # flatten
-    return [line for src in redirects_per_source for line in [(src[0], target) for target in src[1]]]
+    return [
+        line
+        for src in redirects_per_source
+        for line in [(src[0], target) for target in src[1]]
+    ]
 
 
 def read_redirects(domain, redirects_file):
-    return dict2redirects(json.load(open(redirects_file, 'r')), domain)
+    return dict2redirects(json.load(open(redirects_file, "r")), domain)
 
 
 def yes_or_exit():
@@ -33,28 +38,30 @@ def yes_or_exit():
 
 
 def remove_domain(email, domain):
-    domain = '@'+domain
+    domain = "@" + domain
     if domain in email:
-        email = email.replace(domain, '')
+        email = email.replace(domain, "")
     return email
 
 
 def append_domain(email, domain):
-    if not '@' in email:
-        email += "@"+domain
+    if not "@" in email:
+        email += "@" + domain
     return email
 
 
 def pr(reds):
     previous_from = ""
     for red in sorted(reds, key=lambda t: t[0]):
-        from_address = re.sub(r"[^ ]", " ", red[0]) if previous_from == red[0] else red[0]
+        from_address = (
+            re.sub(r"[^ ]", " ", red[0]) if previous_from == red[0] else red[0]
+        )
         print("%s => %s " % (from_address, red[1]))
         previous_from = red[0]
 
 
 def dict2tuple(red):
-    return red['from'], red['to']
+    return red["from"], red["to"]
 
 
 # turn json format (easy to write)
@@ -76,8 +83,8 @@ def dict2redirects(rs, domain):
 def redirects2dict(redirects, domain):
     res = {}
     for r in redirects:
-        dest = remove_domain(r['to'], domain)
-        src = remove_domain(r['from'], domain)
+        dest = remove_domain(r["to"], domain)
+        src = remove_domain(r["from"], domain)
         try:
             res[src].append(dest)
         except KeyError:
