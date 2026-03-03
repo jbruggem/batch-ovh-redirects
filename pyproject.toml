@@ -1,5 +1,5 @@
 [project]
-requires-python = ">= 3.8"
+requires-python = ">= 3.14.3"
 name = "batch-ovh-redirects"
 version = "0.0.1"
 dependencies = [
