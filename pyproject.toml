@@ -1,0 +1,10 @@
+[project]
+requires-python = ">= 3.8"
+name = "batch-ovh-redirects"
+version = "0.0.1"
+dependencies = [
+    "ovh==0.5.0",
+]
+
+[dependency-groups]
+dev = ["pytest"]

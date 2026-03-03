@@ -6,6 +6,14 @@ Env:
 * Dependencies: OVH
 
 
+```
+asdf plugin add python
+asdf plugin add uv
+asdf install
+uv sync
+```
+
+
 ## OVH
 
 First, go there to get app key and app secret:
@@ -47,7 +55,7 @@ usage: redirects.py [-h] [-r REDIRECTS] [-c CONFIG] {get,set,graph}
 Retrieve existing mappings from OVH. Usage:
 
 ```bash
-./redirects.py get
+uv run redirects.py get
 ```
 
 It will store all the existing redirections in `redirects.json`.
@@ -57,7 +65,7 @@ It will store all the existing redirections in `redirects.json`.
 Replace all email mappings on OVH. Usage:
 
 ```bash
-./redirects.py set
+uv run redirects.py set
 ```
 
 It will use `redirects.json` to replace all the redirects by those in that file.
@@ -68,7 +76,7 @@ It will use `redirects.json` to replace all the redirects by those in that file.
 Produce a graphviz `.dot` file describing the contents of  `redirects.json`. Usage:
 
 ```bash
-./redirects.py graph
+uv run redirects.py graph
 ```
 
 You can directly make a PNG out of it (provided you have graphviz installed):
