@@ -45,7 +45,7 @@ def remove_domain(email, domain):
 
 
 def append_domain(email, domain):
-    if not "@" in email:
+    if "@" not in email:
         email += "@" + domain
     return email
 

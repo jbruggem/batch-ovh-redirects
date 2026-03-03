@@ -25,23 +25,26 @@ def main():
         print("Redirects file does not exist. Cannot continue.")
         sys.exit(1)
 
-    config = json.load(open("config.json", "r"))
+    config = json.load(open("config.json"))
     domain = config["domain"]
 
     # no connection needed
-    if "graph" == args.action:
+    if args.action == "graph":
         graph(domain, redirects_file_path, args.dry_run)
-    elif "list" == args.action:
+    elif args.action == "list":
         view_list(domain, redirects_file_path)
     # connection needed (get, set)
     else:
         with OvhConnect(
-            domain, config["app_key"], config["app_secret"], config["consumer_key"]
+            domain,
+            config["app_key"],
+            config["app_secret"],
+            config["consumer_key"],
         ) as api:
-            if "get" == args.action:
+            if args.action == "get":
                 get_redirects(api, domain, redirects_file_path, args.dry_run)
 
-            elif "set" == args.action:
+            elif args.action == "set":
                 set_redirects(
                     api,
                     domain,
@@ -59,7 +62,9 @@ def main():
 def get_redirects(api, domain, redirects_file, dry_run):
     existing = api.list()
     json_content = json.dumps(
-        redirects2dict(existing, domain), sort_keys=True, indent=4
+        redirects2dict(existing, domain),
+        sort_keys=True,
+        indent=4,
     )
 
     if dry_run:
@@ -95,17 +100,17 @@ def set_redirects(api, domain, redirects_file, flat_redirects, dry_run):
     new_redirects = [r for r in expected_redirects if r not in existing_tuples]
     stale_redirects = [r for r in existing if dict2tuple(r) not in expected_redirects]
 
-    if 0 < len(new_redirects):
+    if len(new_redirects) > 0:
         print("\nRedirects to create")
         print("======================")
-        pr(new_redirects)
+        display_redirects(new_redirects)
 
-    if 0 < len(stale_redirects):
+    if len(stale_redirects) > 0:
         print("\nRedirects to remove")
         print("======================")
-        pr([dict2tuple(r) for r in stale_redirects])
+        display_redirects([dict2tuple(r) for r in stale_redirects])
 
-    if 0 == len(new_redirects) and 0 == len(stale_redirects):
+    if len(new_redirects) == 0 and len(stale_redirects) == 0:
         print("\nNothing to do, Redirects are up to date!\n")
         return
 
@@ -195,7 +200,7 @@ def graph(domain, redirects_file, dry_run):
 
     # extract externals
     externals = [node for node in all_nodes if "@" in node]
-    normals = [node for node in all_nodes if not "@" in node]
+    normals = [node for node in all_nodes if "@" not in node]
 
     config_nodes_normal = [
         '    "'
